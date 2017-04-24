@@ -155,6 +155,21 @@ public class SitemapGeneratorTest extends TestCase {
 		assertEquals(expected, sitemap);
 	}
 	
+	public void testSimpleUrlWithComment() throws Exception {
+		wsg = new WebSitemapGenerator("http://www.example.com", dir);
+		wsg.addComment("this is a comment");
+		wsg.addUrl("http://www.example.com/index.html");
+		String expected = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" + 
+		    "<!--this is a comment-->\n" +
+			"<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\" >\n" + 
+			"  <url>\n" + 
+			"    <loc>http://www.example.com/index.html</loc>\n" + 
+			"  </url>\n" + 
+			"</urlset>";
+		String sitemap = writeSingleSiteMap(wsg);
+		assertEquals(expected, sitemap);
+	}
+	
 	public void testBadUrl() throws Exception {
 		wsg = new WebSitemapGenerator("http://www.example.com", dir);
 		try {
@@ -307,16 +322,21 @@ public class SitemapGeneratorTest extends TestCase {
 		File file = files.get(0);
 		file.deleteOnExit();
 		StringBuilder sb = new StringBuilder();
+		InputStreamReader reader = null;
 		try {
 			FileInputStream fileStream = new FileInputStream(file);
 			GZIPInputStream gzipStream = new GZIPInputStream(fileStream);
-			InputStreamReader reader = new InputStreamReader(gzipStream);
+			reader = new InputStreamReader(gzipStream);
 			int c;
 			while ((c = reader.read()) != -1) {
 				sb.append((char)c);
 			}
 		} catch (IOException e) {
 			throw new RuntimeException(e);
+		} finally {
+			if (reader != null){
+				reader.close();
+			}
 		}
 		file.delete();
 		String actual = sb.toString();

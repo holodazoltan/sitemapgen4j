@@ -29,6 +29,7 @@ abstract class SitemapGenerator<U extends ISitemapUrl, THIS extends SitemapGener
 	private final boolean autoValidate;
 	private final boolean gzip;
 	private final ISitemapUrlRenderer<U> renderer;
+	private final List<String> comments = new ArrayList<String>();
 	private int mapCount = 0;
 	private boolean finished = false;
 	
@@ -156,6 +157,18 @@ abstract class SitemapGenerator<U extends ISitemapUrl, THIS extends SitemapGener
 		return addUrl(sitemapUrl);
 	}
 	
+	public THIS addComments(String... comments) {
+		for (String comment : comments) {
+			addComment(comment);
+		}
+		return getThis();
+	}
+	
+	public THIS addComment(String comment) {
+		comments.add(comment);
+		return getThis();
+	}
+	
 	@SuppressWarnings("unchecked")
 	THIS getThis() {
 		return (THIS)this;
@@ -196,6 +209,9 @@ abstract class SitemapGenerator<U extends ISitemapUrl, THIS extends SitemapGener
 	
 	private void writeSiteMapAsString(StringBuilder sb, List<U> urls) {
 		sb.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
+		for (String comment : comments) {
+			sb.append("<!--").append(comment).append("-->\n");
+		}
 		sb.append("<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\" ");
 		if (renderer.getXmlNamespaces() != null) {
 			sb.append(renderer.getXmlNamespaces());
