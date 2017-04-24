@@ -343,6 +343,40 @@ public class SitemapGeneratorTest extends TestCase {
 		assertEquals("sitemap didn't match", SITEMAP1, actual);
 	}
 	
+	public void testGzipWithAutoValidaton() throws Exception {
+		wsg = WebSitemapGenerator.builder("http://www.example.com", dir)
+			.gzip(true).autoValidate(true).build();
+		for (int i = 0; i < 9; i++) {
+			wsg.addUrl("http://www.example.com/"+i);
+		}
+		wsg.addUrl("http://www.example.com/9");
+		List<File> files = wsg.write();
+		assertEquals("Too many files: " + files.toString(), 1, files.size());
+		assertEquals("Sitemap misnamed", "sitemap.xml.gz", files.get(0).getName());
+		File file = files.get(0);
+		file.deleteOnExit();
+		StringBuilder sb = new StringBuilder();
+		InputStreamReader reader = null;
+		try {
+			FileInputStream fileStream = new FileInputStream(file);
+			GZIPInputStream gzipStream = new GZIPInputStream(fileStream);
+			reader = new InputStreamReader(gzipStream);
+			int c;
+			while ((c = reader.read()) != -1) {
+				sb.append((char)c);
+			}
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		} finally {
+			if (reader != null){
+				reader.close();
+			}
+		}
+		file.delete();
+		String actual = sb.toString();
+		assertEquals("sitemap didn't match", SITEMAP1, actual);
+	}
+	
 	public void testBaseDirIsNullThrowsNullPointerException() throws Exception {
 		wsg = WebSitemapGenerator.builder("http://www.example.com", null).autoValidate(true).maxUrls(10).build();
 		wsg.addUrl("http://www.example.com/index.html");

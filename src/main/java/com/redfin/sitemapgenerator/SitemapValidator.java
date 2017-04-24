@@ -1,9 +1,12 @@
 package com.redfin.sitemapgenerator;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.zip.GZIPInputStream;
 
 import javax.xml.XMLConstants;
 import javax.xml.transform.sax.SAXSource;
@@ -22,7 +25,6 @@ import org.xml.sax.SAXException;
  */
 public class SitemapValidator {
 	
-	//TODO support gzip
 	//TODO confirm < 10MB
 	//TODO confirm single host
 	//TODO confirm correct host
@@ -69,12 +71,26 @@ public class SitemapValidator {
 
 	private static void validateXml(File sitemap, Schema schema) throws SAXException {
 		Validator validator = schema.newValidator();
+		InputStreamReader reader = null;
 		try {
-			FileReader reader = new FileReader(sitemap);
+			if (sitemap.getPath().contains(".xml.gz")){
+				FileInputStream fileStream = new FileInputStream(sitemap);
+				GZIPInputStream gzipStream = new GZIPInputStream(fileStream);
+				reader = new InputStreamReader(gzipStream);
+			} else {
+				reader = new FileReader(sitemap);
+			}
 			SAXSource source = new SAXSource(new InputSource(reader));
 			validator.validate(source);
 		} catch (IOException e) {
 			throw new RuntimeException(e);
+		} finally {
+			if (reader != null){
+				try {
+					reader.close();
+				} catch (IOException e) {
+				}
+			}
 		}
 	}
 
